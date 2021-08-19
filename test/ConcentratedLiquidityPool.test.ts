@@ -358,12 +358,16 @@ describe.only("Concentrated liquidity pool", function () {
     const usdPaid = oldUSDBalance.sub(
       await bento.balanceOf(usd.address, alice.address)
     );
+    const token0ProtocolFee = await pool1.token0ProtocolFee();
+    const token1ProtocolFee = await pool1.token1ProtocolFee();
 
     expect(oldLiq).to.be.eq(newLiq, "Liquidity changed from 0 input");
     expect(oldTick).to.be.eq(newTick, "Tick changed from 0 input");
     expect(usdPaid).to.be.eq(0, "Token paid changed from 0 input");
     expect(ethReceived).to.be.eq(0, "Token paid changed from 0 input");
     expect(oldPrice).to.be.eq(newPrice, "Price changed from 0 input");
+    expect(token0ProtocolFee).to.be.eq(0, "Protocol fee earned in token0");
+    expect(token1ProtocolFee).to.be.eq(0, "Protocol fee earned in token1");
   });
 
   it("pool1 - Should execute trade within current tick - one for zero", async () => {
@@ -400,6 +404,8 @@ describe.only("Concentrated liquidity pool", function () {
     );
     const tradePrice = parseInt(usdPaid.mul(100000).div(ethReceived)) / 100000;
     const tradePriceSqrtX96 = getSqrtX96Price(tradePrice);
+    const token0ProtocolFee = await pool1.token0ProtocolFee();
+    const token1ProtocolFee = await pool1.token1ProtocolFee();
 
     expect(usdPaid.toString()).to.be.eq(
       getBigNumber(50).toString(),
@@ -416,6 +422,14 @@ describe.only("Concentrated liquidity pool", function () {
     );
     expect(oldPrice.lt(newPrice)).to.be.eq(true, "Price didn't increase");
     expect(oldTick).to.be.eq(newTick, "We crossed by mistake");
+    expect(token0ProtocolFee.gt(0)).to.be.eq(
+      true,
+      "Received protocol fee in token0"
+    );
+    expect(token1ProtocolFee.eq(0)).to.be.eq(
+      true,
+      "Received protocol fee in token1"
+    );
   });
 
   it("pool1 - should execute trade within current tick - zero for one", async () => {
@@ -577,6 +591,22 @@ describe.only("Concentrated liquidity pool", function () {
     expect(oldLiq.gt(newLiq)).to.be.eq(
       true,
       "We didn't cross out of one position"
+    );
+  });
+  it("should collect protocol fee", async () => {
+    const token0ProtocolFeeOld = await pool1.token0ProtocolFee();
+    const token1ProtocolFeeOld = await pool1.token1ProtocolFee();
+    await pool1.collectProtocolFee();
+    const token0ProtocolFee = await pool1.token0ProtocolFee();
+    const token1ProtocolFee = await pool1.token1ProtocolFee();
+
+    expect(token0ProtocolFee.eq(1)).to.be.eq(
+      true,
+      "token0 - Protocol Fee reset to 1"
+    );
+    expect(token1ProtocolFee.eq(1)).to.be.eq(
+      true,
+      "token1 - Protocol Fee reset to 1"
     );
   });
 

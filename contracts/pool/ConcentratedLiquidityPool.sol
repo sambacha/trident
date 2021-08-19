@@ -38,6 +38,9 @@ contract ConcentratedLiquidityPool is IPool {
     uint128 internal reserve0; /// @dev (bento share) balance tracker
     uint128 internal reserve1;
 
+    uint128 public token0ProtocolFee;
+    uint128 public token1ProtocolFee;
+
     mapping(int24 => Tick) public ticks;
     mapping(address => mapping(int24 => mapping(int24 => Position))) public positions;
 
@@ -320,8 +323,7 @@ contract ConcentratedLiquidityPool is IPool {
             require(uint256(newBalance) <= amount0, "MISSING_X_DEPOSIT");
             reserve0 = newBalance;
             reserve1 -= (uint128(amountOut) + uint128(feeAmount) + uint128(protocolFee));
-            // transfer fees to bar
-            _transfer(token1, protocolFee, barFeeTo, false);
+            token1ProtocolFee += uint128(protocolFee);
             _transfer(token1, amountOut, recipient, unwrapBento);
             emit Swap(recipient, token0, token1, inAmount, amountOut);
         } else {
@@ -329,8 +331,7 @@ contract ConcentratedLiquidityPool is IPool {
             require(uint256(newBalance) <= amount1, "MISSING_Y_DEPOSIT");
             reserve1 = newBalance;
             reserve0 -= (uint128(amountOut) + uint128(feeAmount) + uint128(protocolFee));
-            // transfer fees to bar
-            _transfer(token0, protocolFee, barFeeTo, false);
+            token0ProtocolFee += uint128(protocolFee);
             _transfer(token0, amountOut, recipient, unwrapBento);
             emit Swap(recipient, token1, token0, inAmount, amountOut);
         }
@@ -601,5 +602,12 @@ contract ConcentratedLiquidityPool is IPool {
         if (currentNearestTick < upper && upper <= actualNearestTick) currentNearestTick = upper;
 
         nearestTick = currentNearestTick;
+    }
+
+    function collectProtocolFee() public {
+        _transfer(token0, token0ProtocolFee - 1, barFeeTo, false);
+        _transfer(token1, token1ProtocolFee - 1, barFeeTo, false);
+        token0ProtocolFee = 1;
+        token1ProtocolFee = 1;
     }
 }
