@@ -203,7 +203,7 @@ contract ConcentratedLiquidityPool is IPool {
         uint256 protocolFee;
         amountOut;
         uint256 feeAmount;
-        uint256 feeGrowthGlobal = zeroForOne ? feeGrowthGlobal0 : feeGrowthGlobal1; /// @dev take fees in the output token.
+        uint256 feeGrowthGlobal = zeroForOne ? feeGrowthGlobal0 : feeGrowthGlobal1; /// @dev take fees in the input token.
         {
             int24 nextTickToCross = zeroForOne ? nearestTick : ticks[nearestTick].nextTick;
             uint256 currentPrice = uint256(price);
