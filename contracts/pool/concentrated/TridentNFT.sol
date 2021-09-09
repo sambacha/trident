@@ -3,7 +3,7 @@
 pragma solidity >=0.8.0;
 
 /// @notice Trident pool ERC-721 contract.
-contract TridentNFT {
+abstract contract TridentNFT {
     uint256 public totalSupply; // @dev Tracks total liquidity range positions.
     string public constant name = "TridentNFT";
     string public constant symbol = "tNFT";
